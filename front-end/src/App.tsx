@@ -1,65 +1,183 @@
-import React from 'react';
-import logo from './logo.svg';
+import React, { useEffect, useState, useRef } from 'react';
 import './App.css';
-import {getCloudBaseAuth} from "./utils/cloudbase";
-import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom'; // 导入路由跳转工具
+import { getCloudBaseAuth } from './utils/cloudbase';
+import { useNavigate } from 'react-router-dom';
+import CryptoJS from 'crypto-js';
+
+// ======= 讯飞语音识别配置 =======
+const APPID = process.env.REACT_APP_IFLYTEK_APPID || '';
+const APIKey = process.env.REACT_APP_IFLYTEK_APIKEY || '';
+const APISecret = process.env.REACT_APP_IFLYTEK_APISECRET || '';
+const IAT_URL = 'wss://iat-api.xfyun.cn/v2/iat';
 
 function App() {
-  // 1. 状态管理：控制弹窗显示
   const [showLoginModal, setShowLoginModal] = useState(false);
-  // 2. 获取路由跳转函数
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
+  const [text, setText] = useState('');
   const navigate = useNavigate();
-
   const auth = getCloudBaseAuth();
 
-  // 3. 初始化时检查登录状态
-  useEffect(() => {
-    console.log("hello!")
+  const wsRef = useRef<WebSocket | null>(null);
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const processorRef = useRef<ScriptProcessorNode | null>(null);
+  const sourceRef = useRef<MediaStreamAudioSourceNode | null>(null);
 
-    console.log(auth.hasLoginState())
+  // ======= 登录状态检查 =======
+  useEffect(() => {
     if (!auth.hasLoginState()) {
-      // 未登录，显示弹窗
       setShowLoginModal(true);
+    } else {
+      setIsLoggedIn(true);
     }
   }, [auth]);
 
-  // 4. 关闭弹窗的处理函数：关闭弹窗后跳转至登录页
   const handleCloseModal = () => {
-    setShowLoginModal(false); // 隐藏弹窗
-    navigate('/login'); // 跳转到登录页
+    setShowLoginModal(false);
+    navigate('/login');
+  };
+
+  // ======= 工具函数：ArrayBuffer转Base64 =======
+  const arrayBufferToBase64 = (buffer: ArrayBuffer) => {
+    let binary = '';
+    const bytes = new Uint8Array(buffer);
+    const len = bytes.byteLength;
+    for (let i = 0; i < len; i++) binary += String.fromCharCode(bytes[i]);
+    return btoa(binary);
+  };
+
+  // ======= 生成 WebSocket URL =======
+  const getWebSocketUrl = () => {
+    const host = 'iat-api.xfyun.cn';
+    const date = new Date().toUTCString();
+    const signatureOrigin = `host: ${host}\ndate: ${date}\nGET /v2/iat HTTP/1.1`;
+    const signatureSha = CryptoJS.HmacSHA256(signatureOrigin, APISecret);
+    const signature = CryptoJS.enc.Base64.stringify(signatureSha);
+    const authorizationOrigin = `api_key="${APIKey}", algorithm="hmac-sha256", headers="host date request-line", signature="${signature}"`;
+    const authorization = btoa(authorizationOrigin);
+    return `${IAT_URL}?authorization=${authorization}&date=${encodeURIComponent(date)}&host=${host}`;
+  };
+
+  // ======= 开始录音 =======
+  const startRecording = async () => {
+    setText('');
+    setIsRecording(true);
+
+    const ws = new WebSocket(getWebSocketUrl());
+    wsRef.current = ws;
+
+    ws.onopen = async () => {
+      console.log('✅ WebSocket连接成功');
+
+      // ===== 首帧 =====
+      ws.send(
+          JSON.stringify({
+            common: { app_id: APPID },
+            business: { language: 'zh_cn', domain: 'iat', accent: 'mandarin', vad_eos: 5000 },
+            data: { status: 0, format: 'audio/L16;rate=16000', encoding: 'raw', audio: '' },
+          })
+      );
+      console.log('🚀 首帧已发送');
+
+      // ===== 获取麦克风音频 =====
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const audioContext = new AudioContext({ sampleRate: 16000 });
+      audioContextRef.current = audioContext;
+      const source = audioContext.createMediaStreamSource(stream);
+      sourceRef.current = source;
+
+      const processor = audioContext.createScriptProcessor(4096, 1, 1);
+      processorRef.current = processor;
+
+      processor.onaudioprocess = (e) => {
+        if (ws.readyState !== WebSocket.OPEN) return;
+        const input = e.inputBuffer.getChannelData(0);
+        const buffer = new ArrayBuffer(input.length * 2);
+        const view = new DataView(buffer);
+        for (let i = 0; i < input.length; i++) {
+          let s = Math.max(-1, Math.min(1, input[i]));
+          view.setInt16(i * 2, s < 0 ? s * 0x8000 : s * 0x7fff, true);
+        }
+        const base64data = arrayBufferToBase64(buffer);
+        ws.send(
+            JSON.stringify({
+              data: { status: 1, format: 'audio/L16;rate=16000', encoding: 'raw', audio: base64data },
+            })
+        );
+      };
+
+      source.connect(processor);
+      processor.connect(audioContext.destination);
+    };
+
+    ws.onmessage = (event) => {
+      const jsonData = JSON.parse(event.data);
+      if (jsonData.data?.result) {
+        const str = jsonData.data.result.ws
+            .map((w: any) => w.cw.map((cw: any) => cw.w).join(''))
+            .join('');
+        setText((prev) => prev + str);
+      }
+    };
+
+    ws.onerror = (err) => console.error('WebSocket 出错：', err);
+    ws.onclose = () => console.log('WebSocket 已关闭');
+  };
+
+  // ======= 停止录音 =======
+  const stopRecording = () => {
+    setIsRecording(false);
+
+    // 停止 Web Audio
+    processorRef.current?.disconnect();
+    sourceRef.current?.disconnect();
+    audioContextRef.current?.close();
+
+    // 发送结束帧
+    if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+      wsRef.current.send(
+          JSON.stringify({
+            data: { status: 2, format: 'audio/L16;rate=16000', encoding: 'raw', audio: '' },
+          })
+      );
+      console.log('🚀 结束帧已发送');
+
+      // 延迟关闭 WebSocket，确保结束帧发送成功
+      setTimeout(() => {
+        wsRef.current?.close();
+        wsRef.current = null;
+      }, 100);
+    }
   };
 
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+      <div className="App">
+        <div className="app-header">
+          <h1 className="app-name">🎤 AI 旅行规划师</h1>
+        </div>
 
-      {/* 5. 未登录弹窗 */}
-      {showLoginModal && (
-          <div className="login-modal">
-            <div className="modal-content">
-              <p>您尚未登录，请先登录</p>
-              <button onClick={handleCloseModal}>确定</button>
+        {showLoginModal && (
+            <div className="login-modal">
+              <div className="modal-content">
+                <p>您尚未登录，请先登录</p>
+                <button onClick={handleCloseModal}>确定</button>
+              </div>
+              <div className="modal-overlay" onClick={handleCloseModal} />
             </div>
+        )}
 
-            {/* 遮罩层（可选）：点击遮罩也关闭弹窗并跳转 */}
-            <div className="modal-overlay" onClick={handleCloseModal} />
-          </div>
-      )}
-    </div>
+        {isLoggedIn && (
+            <div className="recorder-box">
+              <button onClick={isRecording ? stopRecording : startRecording}>
+                {isRecording ? '⏹ 停止录音' : '🎙 开始录音'}
+              </button>
+              {/*<p style={{ marginTop: 20 }}>*/}
+              {/*  <strong>识别结果：</strong>*/}
+              {/*</p>*/}
+              <div className="result-box">{text || '点击"开始录音"按钮，开始讲话...'}</div>
+            </div>
+        )}
+      </div>
   );
 }
 

@@ -39,3 +39,5 @@ build/
 /front-end/.env.production
 /front-end/npm-debug.log*
 /front-end/yarn-error.log*
+
+/travel-api/src/main/resources

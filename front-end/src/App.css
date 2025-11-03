@@ -1,68 +1,80 @@
-.App {
-  text-align: center;
-}
-
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
-  }
-}
-
-.App-header {
-  background-color: #282c34;
-  min-height: 100vh;
+/* 全局布局 */
+.app-container {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  font-size: calc(10px + 2vmin);
-  color: white;
-}
-
-.App-link {
-  color: #61dafb;
-}
-
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-/* 在 App.css 中添加以下样式 */
-.login-modal {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
+  justify-content: flex-start;
   height: 100vh;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 9999; /* 确保足够大，覆盖其他内容 */
+  padding: 40px 20px;
+  background: linear-gradient(135deg, #89f7fe 0%, #66a6ff 100%);
+  color: #333;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
-.modal-content {
-  background: white;
-  padding: 20px;
-  border-radius: 8px;
-  box-shadow: 0 0 10px rgba(0,0,0,0.3);
-  z-index: 10000; /* 高于遮罩层 */
+/* 标题 */
+.app-title {
+  font-size: 28px;
+  font-weight: bold;
+  margin-bottom: 30px;
 }
 
-.modal-overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
+.app-name {
   width: 100%;
-  height: 100%;
-  background: rgba(0,0,0,0.5);
+  /* 添加水平居中：上下边距20px，左右自动 */
+  margin: 20px auto;
+  text-align: center;
+}
+
+/* 按钮 */
+button {
+  padding: 10px 20px;
+  font-size: 16px;
+  font-weight: 500;
+  color: white;
+  background-color: #007bff;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.2s ease-in-out;
+}
+
+button:hover {
+  background-color: #0056b3;
+}
+
+/* 停止录音按钮（红色） */
+button.stop {
+  background-color: #dc3545;
+}
+
+button.stop:hover {
+  background-color: #a71d2a;
+}
+
+/* 识别结果展示 */
+.result-box {
+  width: 80%;
+  /* 添加水平居中：上下边距20px，左右自动 */
+  margin: 20px auto;
+  min-height: 200px;
+  background: #ffffffaa;
+  border-radius: 12px;
+  padding: 20px;
+  /*margin-top: 20px;*/
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+  overflow-y: auto;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+.result-box p {
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+/* 状态提示 */
+.status {
+  margin-top: 15px;
+  font-size: 14px;
+  color: #444;
 }
