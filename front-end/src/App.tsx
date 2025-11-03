@@ -3,6 +3,7 @@ import './App.css';
 import { getCloudBaseAuth } from './utils/cloudbase';
 import { useNavigate } from 'react-router-dom';
 import CryptoJS from 'crypto-js';
+import Modal from './components/Modal';
 
 // ======= 讯飞语音识别配置 =======
 const APPID = process.env.REACT_APP_IFLYTEK_APPID || '';
@@ -15,6 +16,8 @@ function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const [text, setText] = useState('');
+  const [userInfo, setUserInfo] = useState<any>(null);
+  const [menuOpen, setMenuOpen] = useState(false);
   const navigate = useNavigate();
   const auth = getCloudBaseAuth();
 
@@ -25,16 +28,37 @@ function App() {
 
   // ======= 登录状态检查 =======
   useEffect(() => {
-    if (!auth.hasLoginState()) {
-      setShowLoginModal(true);
-    } else {
-      setIsLoggedIn(true);
-    }
+    const checkAuth = async () => {
+      if (!auth.hasLoginState()) {
+        setShowLoginModal(true);
+      } else {
+        setIsLoggedIn(true);
+        try {
+          const userInfo = await auth.getUserInfo();
+          setUserInfo(userInfo);
+        } catch (e) {
+          console.error('获取用户信息失败:', e);
+        }
+      }
+    };
+    checkAuth();
   }, [auth]);
 
   const handleCloseModal = () => {
     setShowLoginModal(false);
     navigate('/login');
+  };
+
+  // ======= 登出功能 =======
+  const handleLogout = async () => {
+    try {
+      await auth.signOut();
+      setIsLoggedIn(false);
+      setUserInfo(null);
+      navigate('/login');
+    } catch (err) {
+      console.error('登出失败：', err);
+    }
   };
 
   // ======= 工具函数：ArrayBuffer转Base64 =======
@@ -68,8 +92,6 @@ function App() {
 
     ws.onopen = async () => {
       console.log('✅ WebSocket连接成功');
-
-      // ===== 首帧 =====
       ws.send(
           JSON.stringify({
             common: { app_id: APPID },
@@ -79,7 +101,6 @@ function App() {
       );
       console.log('🚀 首帧已发送');
 
-      // ===== 获取麦克风音频 =====
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       const audioContext = new AudioContext({ sampleRate: 16000 });
       audioContextRef.current = audioContext;
@@ -127,13 +148,10 @@ function App() {
   // ======= 停止录音 =======
   const stopRecording = () => {
     setIsRecording(false);
-
-    // 停止 Web Audio
     processorRef.current?.disconnect();
     sourceRef.current?.disconnect();
     audioContextRef.current?.close();
 
-    // 发送结束帧
     if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
       wsRef.current.send(
           JSON.stringify({
@@ -141,8 +159,6 @@ function App() {
           })
       );
       console.log('🚀 结束帧已发送');
-
-      // 延迟关闭 WebSocket，确保结束帧发送成功
       setTimeout(() => {
         wsRef.current?.close();
         wsRef.current = null;
@@ -152,33 +168,55 @@ function App() {
 
   return (
       <div className="App">
-        <div className="app-header">
-          <h1 className="app-name">🎤 AI 旅行规划师</h1>
-        </div>
-
+        {/* 未登录提示模态框 */}
         {showLoginModal && (
-            <div className="login-modal">
-              <div className="modal-content">
-                <p>您尚未登录，请先登录</p>
-                <button onClick={handleCloseModal}>确定</button>
-              </div>
-              <div className="modal-overlay" onClick={handleCloseModal} />
-            </div>
+            <Modal show={showLoginModal} title="提示" onClose={handleCloseModal}>
+              您尚未登录，请先登录
+            </Modal>
         )}
 
+        {/* 登录后主界面 */}
         {isLoggedIn && (
-            <div className="recorder-box">
-              <button onClick={isRecording ? stopRecording : startRecording}>
-                {isRecording ? '⏹ 停止录音' : '🎙 开始录音'}
-              </button>
-              {/*<p style={{ marginTop: 20 }}>*/}
-              {/*  <strong>识别结果：</strong>*/}
-              {/*</p>*/}
-              <div className="result-box">{text || '点击"开始录音"按钮，开始讲话...'}</div>
-            </div>
+            <>
+              <div className="app-header">
+                <h1 className="app-name">🎤 AI 旅行规划师</h1>
+
+                {/* 用户信息显示 */}
+                {userInfo && (
+                    <div className="user-info" onClick={() => setMenuOpen(!menuOpen)}>
+                      <img
+                          src={userInfo.picture || '/default_avatar.jpg'}
+                          // src={'../public/default_avatar.jpg'}
+                          alt="avatar"
+                          className="user-avatar"
+                      />
+                      <span className="user-name">{userInfo.name || '用户'}</span>
+
+                      {/* 下拉菜单 */}
+                      {menuOpen && (
+                          <div className="user-menu">
+                            {/*<p>{userInfo.email_verified ? '✅ 邮箱已验证' : '❌ 邮箱未验证'}</p>*/}
+                            <button onClick={handleLogout}>登出</button>
+                          </div>
+                      )}
+                    </div>
+                )}
+              </div>
+
+              {/* 语音识别区 */}
+              <div className="recorder-box">
+                <button onClick={isRecording ? stopRecording : startRecording}>
+                  {isRecording ? '⏹ 停止录音' : '🎙 开始录音'}
+                </button>
+                <div className="result-box">
+                  {text || '点击"开始录音"按钮，开始讲话...'}
+                </div>
+              </div>
+            </>
         )}
       </div>
   );
+
 }
 
 export default App;
