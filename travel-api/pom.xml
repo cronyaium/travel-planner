@@ -24,6 +24,20 @@
             <!-- 请将 'the-latest-version' 替换为最新版本号：https://mvnrepository.com/artifact/com.alibaba/dashscope-sdk-java -->
             <version>2.18.2</version>
         </dependency>
+
+        <!-- Apache HttpClient 5.x 核心依赖（包含 fluent API） -->
+        <dependency>
+            <groupId>org.apache.httpcomponents.client5</groupId>
+            <artifactId>httpclient5-fluent</artifactId>
+            <version>5.5</version> <!-- 推荐使用最新稳定版，目前最新为 5.5 -->
+        </dependency>
+
+        <!-- Alibaba FastJSON（JSON解析工具） -->
+        <dependency>
+            <groupId>com.alibaba</groupId>
+            <artifactId>fastjson</artifactId>
+            <version>2.0.32</version> <!-- 推荐使用2.x版本，兼容Java 8+ -->
+        </dependency>
     </dependencies>
 
 

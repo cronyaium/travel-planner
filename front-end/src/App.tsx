@@ -4,12 +4,16 @@ import { getCloudBaseAuth } from './utils/cloudbase';
 import { useNavigate } from 'react-router-dom';
 import CryptoJS from 'crypto-js';
 import Modal from './components/Modal';
+import MapView from "./components/MapView";
 
 // ======= 讯飞语音识别配置 =======
 const APPID = process.env.REACT_APP_IFLYTEK_APPID || '';
 const APIKey = process.env.REACT_APP_IFLYTEK_APIKEY || '';
 const APISecret = process.env.REACT_APP_IFLYTEK_APISECRET || '';
 const IAT_URL = 'wss://iat-api.xfyun.cn/v2/iat';
+
+// ======= 百度地图配置 =======
+const BAIDU_AK = process.env.REACT_APP_BAIDU_AK || ''; // 百度地图AK
 
 function App() {
   const [showLoginModal, setShowLoginModal] = useState(false);
@@ -61,7 +65,7 @@ function App() {
     }
   };
 
-  // ======= 工具函数：ArrayBuffer转Base64 =======
+  // ======= ArrayBuffer 转 Base64 =======
   const arrayBufferToBase64 = (buffer: ArrayBuffer) => {
     let binary = '';
     const bytes = new Uint8Array(buffer);
@@ -99,7 +103,6 @@ function App() {
             data: { status: 0, format: 'audio/L16;rate=16000', encoding: 'raw', audio: '' },
           })
       );
-      console.log('🚀 首帧已发送');
 
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       const audioContext = new AudioContext({ sampleRate: 16000 });
@@ -158,7 +161,6 @@ function App() {
             data: { status: 2, format: 'audio/L16;rate=16000', encoding: 'raw', audio: '' },
           })
       );
-      console.log('🚀 结束帧已发送');
       setTimeout(() => {
         wsRef.current?.close();
         wsRef.current = null;
@@ -166,36 +168,32 @@ function App() {
     }
   };
 
+  const submit = () => {
+    console.log("提交");
+  };
+
   return (
       <div className="App">
-        {/* 未登录提示模态框 */}
         {showLoginModal && (
             <Modal show={showLoginModal} title="提示" onClose={handleCloseModal}>
               您尚未登录，请先登录
             </Modal>
         )}
 
-        {/* 登录后主界面 */}
         {isLoggedIn && (
             <>
               <div className="app-header">
                 <h1 className="app-name">🎤 AI 旅行规划师</h1>
-
-                {/* 用户信息显示 */}
                 {userInfo && (
                     <div className="user-info" onClick={() => setMenuOpen(!menuOpen)}>
                       <img
                           src={userInfo.picture || '/default_avatar.jpg'}
-                          // src={'../public/default_avatar.jpg'}
                           alt="avatar"
                           className="user-avatar"
                       />
                       <span className="user-name">{userInfo.name || '用户'}</span>
-
-                      {/* 下拉菜单 */}
                       {menuOpen && (
                           <div className="user-menu">
-                            {/*<p>{userInfo.email_verified ? '✅ 邮箱已验证' : '❌ 邮箱未验证'}</p>*/}
                             <button onClick={handleLogout}>登出</button>
                           </div>
                       )}
@@ -203,20 +201,30 @@ function App() {
                 )}
               </div>
 
-              {/* 语音识别区 */}
+              <div className="hint">
+                用语音说出你的旅行需求，例如“我打算去日本玩 5 天”，AI 将自动生成行程并规划路线。
+              </div>
+
               <div className="recorder-box">
+                <div className="result-box">{text || '点击"开始录音"按钮，开始讲话...'}</div>
+              </div>
+
+              <div className="op-panel">
                 <button onClick={isRecording ? stopRecording : startRecording}>
                   {isRecording ? '⏹ 停止录音' : '🎙 开始录音'}
                 </button>
-                <div className="result-box">
-                  {text || '点击"开始录音"按钮，开始讲话...'}
-                </div>
+                <button onClick={!isRecording ? submit : undefined} disabled={isRecording}>
+                  生成旅行规划
+                </button>
               </div>
+
+              <MapView
+                  ak={BAIDU_AK}
+              />
             </>
         )}
       </div>
   );
-
 }
 
 export default App;

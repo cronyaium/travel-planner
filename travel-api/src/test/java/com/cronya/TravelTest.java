@@ -7,12 +7,15 @@ import com.alibaba.dashscope.common.Message;
 import com.alibaba.dashscope.common.Role;
 import com.alibaba.dashscope.utils.JsonUtils;
 import com.cronya.config.AlibabaModelConfig;
+import com.cronya.service.BaiduMapService;
 import com.cronya.service.TripPlanService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 
 @SpringBootTest
 public class TravelTest {
@@ -58,5 +61,20 @@ public class TravelTest {
     public void testTravelPlanService() {
         String rawText = "我想去日本玩五天，预算一万元，喜欢美食和动漫，带孩子。";
         tripPlanService.generateTripPlan(rawText);
+    }
+
+    @Autowired
+    private BaiduMapService baiduMapService;
+
+    @Test
+    public void testBaiduMap() {
+        Map<String, String> params = new HashMap<>();
+        params.put("origin", "39.908823,116.39748"); // 起点经纬度（lng,lat）
+        params.put("destination", "39.896499,116.321317"); // 终点经纬度
+
+//        params.put("origin", "35.652832,139.839478"); // 东京
+//        params.put("destination", "34.672314,135.484802"); // 大阪
+
+        System.out.println(baiduMapService.getDrivingRoute(params));
     }
 }
