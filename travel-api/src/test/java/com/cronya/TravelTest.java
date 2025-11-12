@@ -59,7 +59,7 @@ public class TravelTest {
 
     @Test
     public void testTravelPlanService() {
-        String rawText = "我想去日本玩五天，预算一万元，喜欢美食和动漫，带孩子。";
+        String rawText = "我想去北京玩三天，预算一万元，喜欢美食和动漫，带孩子。";
         tripPlanService.generateTripPlan(rawText);
     }
 

@@ -1,0 +1,37 @@
+.trip-container {
+    padding: 40px;
+    background: #f5f7fa;
+    min-height: 100vh;
+}
+
+.trip-card {
+    max-width: 900px;
+    margin: 0 auto;
+    border-radius: 12px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+    transition: all 0.3s ease;
+}
+
+.trip-card:hover {
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+}
+
+.ant-table {
+    background: #fff !important;
+}
+
+.ant-modal-content {
+    border-radius: 12px !important;
+}
+
+.ant-modal-header {
+    border-bottom: none !important;
+}
+
+.ant-modal-title {
+    font-weight: 600;
+}
+
+.ant-descriptions-bordered .ant-descriptions-item-label {
+    background: #fafafa !important;
+}
