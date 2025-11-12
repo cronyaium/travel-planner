@@ -1,14 +1,26 @@
 # 构建阶段：用 Maven 打包
-FROM maven:3.6.3-eclipse-temurin-21 AS build
+FROM maven:3.8.8-eclipse-temurin-17 AS build
 WORKDIR /app
-COPY travel-api/pom.xml .
-COPY travel-api/src ./src
+
+# 配置阿里云 Maven 镜像
+RUN mkdir -p /root/.m2 && \
+    echo '<settings xmlns="http://maven.apache.org/SETTINGS/1.0.0"' \
+    'xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"' \
+    'xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.0.0 https://maven.apache.org/xsd/settings-1.0.0.xsd">' \
+    '<mirrors><mirror><id>aliyunmaven</id><mirrorOf>*</mirrorOf><name>Aliyun</name>' \
+    '<url>https://maven.aliyun.com/repository/public</url></mirror></mirrors></settings>' \
+    > /root/.m2/settings.xml
+
+# 复制整个父模块
+#COPY pom.xml ./ 
+#COPY travel-api ./travel-api
+COPY . .
 RUN mvn clean package -DskipTests
 
 # 生产阶段：只保留 JAR 和 JRE
-FROM eclipse-temurin:21-jdk-alpine
+FROM eclipse-temurin:17-jdk-alpine
 WORKDIR /app
-COPY --from=build /app/target/travel-api-0.0.1-SNAPSHOT.jar app.jar
+COPY --from=build /app/travel-api/target/travel-api-0.0.1-SNAPSHOT.jar app.jar
 
 EXPOSE 8080
 ENTRYPOINT ["java","-jar","app.jar"]

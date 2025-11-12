@@ -7,6 +7,8 @@
         <groupId>com.cronya</groupId>
         <artifactId>travel-planner</artifactId>
         <version>0.0.1-SNAPSHOT</version>
+	<!-- 父工程 POM 在子模块的上一级目录（即项目根目录） -->
+  	<relativePath>../pom.xml</relativePath>
     </parent>
 
     <artifactId>travel-api</artifactId>
@@ -44,7 +46,7 @@
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
-            <version>1.18.30</version>
+            <version>1.18.38</version>
             <scope>provided</scope>
         </dependency>
 
@@ -78,8 +80,8 @@
 
 
     <properties>
-        <maven.compiler.source>21</maven.compiler.source>
-        <maven.compiler.target>21</maven.compiler.target>
+        <maven.compiler.source>17</maven.compiler.source>
+        <maven.compiler.target>17</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
