@@ -1,0 +1,30 @@
+alibaba:
+  model:
+    endpoint: "https://baichuan-model-api.aliyuncs.com/v1/stream/completion"
+    apiKey: ${ALIBABA_APIKEY}
+    apiSecret: "你的阿里云APISecret" # 这个不需要
+
+baidu:
+  map:
+    server:
+      ak: ${BMAP_SERVER_AK}
+    driving:
+      url: "https://api.map.baidu.com/directionlite/v1/driving"
+
+spring:
+  # 数据库连接核心配置
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USERNAME}  # 你的 MySQL 用户名
+    password: ${DB_PASSWORD}  # 你的 MySQL 密码
+    driver-class-name: com.mysql.jdbc.Driver  # MySQL 5.7 专属驱动类
+  # JPA/Hibernate 配置（适配 MySQL 5.7）
+  jpa:
+    hibernate:
+      ddl-auto: update  # 开发环境用，生产环境改为 none
+    show-sql: true  # 控制台打印 SQL
+    properties:
+      hibernate:
+        # MySQL 5.7 对应方言，避免建表语法错误
+        dialect: org.hibernate.dialect.MySQLDialect
+    open-in-view: false

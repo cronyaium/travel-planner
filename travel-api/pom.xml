@@ -103,7 +103,7 @@
                 <artifactId>spring-boot-maven-plugin</artifactId>
                 <configuration>
                     <!-- 指定启动类全路径（后续创建后填写） -->
-                    <mainClass>com.cronya.TravelApiApplication</mainClass>
+                    <mainClass>com.cronya.TravelApplication</mainClass>
                 </configuration>
                 <executions>
                     <execution>
