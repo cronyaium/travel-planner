@@ -19,14 +19,14 @@ services:
     build:
       context: .
       dockerfile: front-end/Dockerfile.frontend
-      args:
-        REACT_APP_CLOUDBASE_ENV : ${REACT_APP_CLOUDBASE_ENV}
-        REACT_APP_IFLYTEK_APPID : ${REACT_APP_IFLYTEK_APPID}
-        REACT_APP_IFLYTEK_APISECRET : ${REACT_APP_IFLYTEK_APISECRET}
-        REACT_APP_IFLYTEK_APIKEY : ${REACT_APP_IFLYTEK_APIKEY}
-        REACT_APP_BAIDU_AK : ${REACT_APP_BAIDU_AK}
     container_name: travel-planner-frontend
     ports:
       - "3000:80"
     depends_on:
       - backend
+    environment:
+      - REACT_APP_CLOUDBASE_ENV=${REACT_APP_CLOUDBASE_ENV}
+      - REACT_APP_IFLYTEK_APPID=${REACT_APP_IFLYTEK_APPID}
+      - REACT_APP_IFLYTEK_APISECRET=${REACT_APP_IFLYTEK_APISECRET}
+      - REACT_APP_IFLYTEK_APIKEY=${REACT_APP_IFLYTEK_APIKEY}
+      - REACT_APP_BAIDU_AK=${REACT_APP_BAIDU_AK}

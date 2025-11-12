@@ -11,13 +11,13 @@ import { Button, Input, Card, Alert } from "antd";
 import {DriveResult} from "./types/DriveResult";
 
 // ======= 讯飞语音识别配置 =======
-const APPID = process.env.REACT_APP_IFLYTEK_APPID || '';
-const APIKey = process.env.REACT_APP_IFLYTEK_APIKEY || '';
-const APISecret = process.env.REACT_APP_IFLYTEK_APISECRET || '';
+const APPID = window._env_.REACT_APP_IFLYTEK_APPID || '';
+const APIKey = window._env_.REACT_APP_IFLYTEK_APIKEY || '';
+const APISecret = window._env_.REACT_APP_IFLYTEK_APISECRET || '';
 const IAT_URL = 'wss://iat-api.xfyun.cn/v2/iat';
 
 // ======= 百度地图配置 =======
-const BAIDU_AK = process.env.REACT_APP_BAIDU_AK || ''; // 百度地图AK
+const BAIDU_AK = window._env_.REACT_APP_BAIDU_AK || ''; // 百度地图AK
 
 const DRIVE_ROUTE_RESULT = {
   "status": 0,

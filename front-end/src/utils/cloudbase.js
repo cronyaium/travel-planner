@@ -6,7 +6,7 @@ let app = null;
 export const initCloudBase = () => {
     if (!app) {
         app = cloudbase.init({
-            env: process.env.REACT_APP_CLOUDBASE_ENV, // 替换为你的环境ID（如 dev-xxxxxx）
+            env: window._env_.REACT_APP_CLOUDBASE_ENV, // 替换为你的环境ID（如 dev-xxxxxx）
         });
     }
     return app;
