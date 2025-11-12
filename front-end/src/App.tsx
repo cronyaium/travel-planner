@@ -108,6 +108,8 @@ function App() {
   const [tripData, setTripData] = useState<TripData | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // 新增状态：控制保存按钮加载状态
+  const [isSaving, setIsSaving] = useState(false);
 
   const [routeData, setRouteData] = useState<DriveResult | null>(null);
 
@@ -128,6 +130,8 @@ function App() {
         setIsLoggedIn(true);
         try {
           const userInfo = await auth.getUserInfo();
+          console.log("userInfo:", userInfo);
+          console.log("uid", userInfo.uid);
           setUserInfo(userInfo);
         } catch (e) {
           console.error('获取用户信息失败:', e);
@@ -352,6 +356,42 @@ function App() {
     }
   };
 
+  // 保存行程到后端
+  const handleSaveTrip = async () => {
+    if (!tripData) return;
+
+    setIsSaving(true);
+    try {
+      // 构造后端需要的对象
+      const payload = {
+        userId: userInfo.uid,               // 填充 user_id
+        tripName: tripData.tripIntent.destination || "",  // 如果 tripData 有名字可以用
+        tripDataJson: JSON.stringify(tripData) // 整个对象序列化为字符串
+      };
+
+      const response = await fetch("http://localhost:8080/api/trips", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload), // 发送 payload
+      });
+
+      if (!response.ok) {
+        throw new Error(`保存失败，状态码: ${response.status}`);
+      }
+
+      // 保存成功
+      const result = await response.json();
+      alert(`✅ 行程保存成功！\n行程ID: ${result.id}`);
+    } catch (err) {
+      console.error("保存行程失败:", err);
+      alert(`❌ 保存失败：${err instanceof Error ? err.message : "未知错误"}`);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   // @ts-ignore
   return (
       <div className="App">
@@ -422,14 +462,33 @@ function App() {
 
               {/* 行程计划组件 */}
               {!loading && !error && tripData && (
-                  <TripPlanner tripData={tripData} />
+                  <div style={{marginBottom: '1rem'}}>
+                    {/* 行程展示组件 */}
+                    <TripPlanner tripData={tripData}/>
+                    {/* 保存按钮 */}
+                    <button
+                        onClick={handleSaveTrip}
+                        style={{
+                          padding: '8px 16px',
+                          backgroundColor: '#1890ff',
+                          color: 'white',
+                          border: 'none',
+                          borderRadius: '4px',
+                          cursor: 'pointer',
+                          marginBottom: '1rem',
+                          fontSize: '14px'
+                        }}
+                    >
+                      保存行程计划
+                    </button>
+                  </div>
               )}
 
               {!loading && !error && routeData && (
-                <MapView
-                    ak={BAIDU_AK}
-                    result={routeData}
-                />
+                  <MapView
+                      ak={BAIDU_AK}
+                      result={routeData}
+                  />
               )}
             </>
         )}

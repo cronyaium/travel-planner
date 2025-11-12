@@ -170,7 +170,7 @@ const Register = () => {
                         if (authType === "phone") setPhone(e.target.value.trim());
                         else setEmail(e.target.value.trim());
                     }}
-                    placeholder={authType === "phone" ? "请输入手机号（如+8613800000000）" : "请输入邮箱地址"}
+                    placeholder={authType === "phone" ? "请输入手机号（如+86 13800000000）" : "请输入邮箱地址"}
                     style={{
                         width: "100%",
                         padding: "10px",

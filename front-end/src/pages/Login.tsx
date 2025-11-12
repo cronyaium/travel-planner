@@ -66,7 +66,7 @@ const Login = () => {
     const getAccountLabel = () => {
         switch (loginType) {
             case "phone":
-                return "手机号（如+8613800000000）";
+                return "手机号（如+86 13800000000）";
             case "email":
                 return "邮箱地址";
             case "username":
