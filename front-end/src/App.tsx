@@ -8,6 +8,7 @@ import MapView from "./components/MapView";
 import TripPlanner from "./components/TripPlanner";
 import { TripData } from "./types/TripData";
 import { Button, Input, Card, Alert } from "antd";
+import {DriveResult} from "./types/DriveResult";
 
 // ======= 讯飞语音识别配置 =======
 const APPID = process.env.REACT_APP_IFLYTEK_APPID || '';
@@ -101,12 +102,15 @@ function App() {
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
-  const [text, setText] = useState('');
+  const [text, setText] = useState('我打算去北京玩3天');
   const [userInfo, setUserInfo] = useState<any>(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const [tripData, setTripData] = useState<TripData | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const [routeData, setRouteData] = useState<DriveResult | null>(null);
+
   const navigate = useNavigate();
   const auth = getCloudBaseAuth();
 
@@ -278,11 +282,59 @@ function App() {
         throw new Error(`HTTP错误，状态码: ${response.status}`);
       }
 
-      // 解析后端返回的JSON数据
-      const result = await response.json();
-      console.log("接口返回结果:", result);
-      // 可以在这里处理返回的行程计划数据（如更新组件状态）
-      setTripData(result);
+      // 解析行程计划结果（包含经纬度）
+      const tripResult: TripData = await response.json();
+      console.log("行程计划结果:", tripResult);
+      setTripData(tripResult);
+
+      // 2. 提取所有地点的经纬度（过滤无效坐标）
+      const coordinates: {latitude: number; longitude: number}[] = [];
+      tripResult.tripPlan.forEach(day => {
+        day.segments.forEach(segment => {
+          // 确保经纬度有效（不为0或null）
+          if (segment.latitude && segment.longitude &&
+              segment.latitude !== 0 && segment.longitude !== 0) {
+            coordinates.push({
+              latitude: segment.latitude,
+              longitude: segment.longitude
+            });
+          }
+        });
+      });
+
+      // 如果没有足够的坐标，不调用路线接口
+      if (coordinates.length < 2) {
+        console.warn("有效坐标不足，无法规划路线");
+        return;
+      }
+
+      // 3. 构建路线参数（改为 JSON 格式，而非 URL 参数）
+      const routeParams = {
+        origin: `${coordinates[0].latitude},${coordinates[0].longitude}`, // 起点
+        destination: `${coordinates[coordinates.length - 1].latitude},${coordinates[coordinates.length - 1].longitude}`, // 终点
+        waypoints: coordinates.length > 2
+            ? coordinates.slice(1, -1).map(coord => `${coord.latitude},${coord.longitude}`).join("|")
+            : "" // 途经点（无则传空字符串）
+      };
+
+      // 4. 调用路线接口（关键修改：GET → POST，参数放请求体）
+      const routeResponse = await fetch("http://localhost:8080/api/route", {
+        method: "POST", // 改为 POST 方法
+        headers: {
+          "Content-Type": "application/json", // 声明 JSON 请求体
+        },
+        body: JSON.stringify(routeParams) // 参数放在请求体中
+      });
+
+      if (!routeResponse.ok) {
+        throw new Error(`路线规划请求失败，状态码: ${routeResponse.status}`);
+      }
+
+      // 注意：后端返回的是 String 类型，需先解析为 JSON
+      const routeResultStr = await routeResponse.text();
+      const routeResult: DriveResult = JSON.parse(routeResultStr);
+      console.log("路线规划结果:", routeResult);
+      setRouteData(routeResult);
 
     } catch (error) {
       // 先判断error是否为Error实例
@@ -373,10 +425,12 @@ function App() {
                   <TripPlanner tripData={tripData} />
               )}
 
-              <MapView
-                  ak={BAIDU_AK}
-                  result={DRIVE_ROUTE_RESULT}
-              />
+              {!loading && !error && routeData && (
+                <MapView
+                    ak={BAIDU_AK}
+                    result={routeData}
+                />
+              )}
             </>
         )}
       </div>

@@ -5,6 +5,8 @@ export interface Segment {
     time: "上午" | "中午" | "下午" | "晚上" | "全天"; // 新增"全天"时间类型
     activity: string;
     location: string;
+    latitude: number;
+    longitude: number;
     cost: number; // 支持小数金额
     category: "住宿" | "交通" | "餐饮" | "景点" | "购物" | "文化";
 }

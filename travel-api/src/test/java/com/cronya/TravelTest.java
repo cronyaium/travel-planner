@@ -71,7 +71,7 @@ public class TravelTest {
         Map<String, String> params = new HashMap<>();
         params.put("origin", "39.908823,116.39748"); // 起点经纬度（lng,lat）
         params.put("destination", "39.896499,116.321317"); // 终点经纬度
-
+        params.put("waypoints", "39.916527,116.390884|39.904162,116.380347|39.900125,116.365523");
 //        params.put("origin", "35.652832,139.839478"); // 东京
 //        params.put("destination", "34.672314,135.484802"); // 大阪
 

@@ -68,6 +68,8 @@ public class TripPlanService {
                           "time": "上午/中午/下午/晚上",
                           "activity": "具体活动",
                           "location": "地点",
+                          "latitude": 数字（纬度，浮点数，保留6位小数，范围 -90~90）,
+                          "longitude": 数字（经度，浮点数，保留6位小数，范围 -180~180）,
                           "cost": 数字（≥0，浮点数，两位小数）,
                           "category": "住宿/交通/餐饮/景点/购物/文化"
                         }
@@ -127,9 +129,10 @@ public class TripPlanService {
                 ========================================================
                 【输出要求】
                 1. 所有数值必须保留两位小数（浮点数），不得含单位。
-                2. 只输出一个完整 JSON 对象（不允许多余文本）。
-                3. 若进行了重新计算或调整，说明写入 "debug" 字段中（字符串）。
-                4. 输出示例：
+                2. 经纬度必须为合法浮点数（latitude 在 -90~90，longitude 在 -180~180），小数点后不超过6位
+                3. 只输出一个完整 JSON 对象（不允许多余文本）。
+                4. 若进行了重新计算或调整，说明写入 "debug" 字段中（字符串）。
+                5. 输出示例：
                    - 含完全匹配的数值
                    - verification 全部为 true
                 
@@ -142,40 +145,24 @@ public class TripPlanService {
                     {
                       "day": 1,
                       "segments": [
-                        {"time": "上午", "activity": "到达并入住民宿", "location": "西湖附近民宿", "cost": 150.00, "category": "住宿"},
-                        {"time": "中午", "activity": "品尝杭帮菜午餐", "location": "楼外楼", "cost": 60.00, "category": "餐饮"},
-                        {"time": "下午", "activity": "游玩西湖景区", "location": "西湖", "cost": 30.00, "category": "景点"}
+                        {"time": "上午", "activity": "到达并入住民宿", "location": "西湖附近民宿", "latitude": 30.241234, "longitude": 120.150678, "cost": 150.00, "category": "住宿"},
+                        {"time": "中午", "activity": "品尝杭帮菜午餐", "location": "楼外楼", "latitude": 30.241899, "longitude": 120.158822, "cost": 60.00, "category": "餐饮"},
+                        {"time": "下午", "activity": "游玩西湖景区", "location": "西湖", "latitude": 30.245678, "longitude": 120.165432, "cost": 30.00, "category": "景点"}
                       ],
                       "dailyTotalCost": 240.00
-                    },
-                    {
-                      "day": 2,
-                      "segments": [
-                        {"time": "上午", "activity": "参观灵隐寺", "location": "灵隐寺", "cost": 80.00, "category": "文化"},
-                        {"time": "下午", "activity": "返程火车", "location": "杭州站", "cost": 40.00, "category": "交通"},
-                        {"time": "晚上", "activity": "住宿", "location": "民宿", "cost": 150.00, "category": "住宿"}
-                      ],
-                      "dailyTotalCost": 270.00
                     }
                   ],
                   "budgetAnalysis": {
-                    "estimatedTotal": 510.00,
-                    "categories": {
-                      "交通": 40.00,
-                      "住宿": 300.00,
-                      "餐饮": 60.00,
-                      "景点": 30.00,
-                      "购物": 0.00,
-                      "文化": 80.00
-                    },
+                    "estimatedTotal": 240.00,
+                    "categories": {"交通": 0.00, "住宿": 150.00, "餐饮": 60.00, "景点": 30.00, "购物": 0.00, "文化": 0.00},
                     "currency": "CNY"
                   },
-                  "computedDailySums": {"day1": 240.00, "day2": 270.00},
-                  "computedCategorySums": {"交通": 40.00, "住宿": 300.00, "餐饮": 60.00, "景点": 30.00, "购物": 0.00, "文化": 80.00},
+                  "computedDailySums": {"day1": 240.00},
+                  "computedCategorySums": {"交通": 0.00, "住宿": 150.00, "餐饮": 60.00, "景点": 30.00, "购物": 0.00, "文化": 0.00},
                   "verification": {"dailyEqual": true, "totalEqual": true, "categoryEqual": true},
-                  "debug": "所有金额计算一致，无需重新调整"
+                  "debug": "所有金额和坐标计算一致"
                 }
-            """;
+                """;
 
 
             String userPrompt = "用户输入：" + rawText;
