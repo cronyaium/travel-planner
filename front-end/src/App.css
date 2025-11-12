@@ -127,6 +127,8 @@ button.stop:hover {
   padding: 6px 12px;
   border-radius: 6px;
   cursor: pointer;
+  font-size: 12px;
+  margin-bottom: 8px;
 }
 
 .op-panel {

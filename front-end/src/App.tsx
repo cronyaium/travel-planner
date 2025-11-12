@@ -102,7 +102,7 @@ function App() {
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
-  const [text, setText] = useState('我打算去北京玩3天');
+  const [text, setText] = useState('');
   const [userInfo, setUserInfo] = useState<any>(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const [tripData, setTripData] = useState<TripData | null>(null);
@@ -415,6 +415,14 @@ function App() {
                       <span className="user-name">{userInfo.name || '用户'}</span>
                       {menuOpen && (
                           <div className="user-menu">
+                            <button
+                                onClick={() => {
+                                  // 跳转到 /trips 页面，并通过 query 传递 userId
+                                  window.location.href = `/trips?userId=${userInfo.uid}`;
+                                }}
+                            >
+                              我的行程
+                            </button>
                             <button onClick={handleLogout}>登出</button>
                           </div>
                       )}
@@ -466,21 +474,23 @@ function App() {
                     {/* 行程展示组件 */}
                     <TripPlanner tripData={tripData}/>
                     {/* 保存按钮 */}
-                    <button
-                        onClick={handleSaveTrip}
-                        style={{
-                          padding: '8px 16px',
-                          backgroundColor: '#1890ff',
-                          color: 'white',
-                          border: 'none',
-                          borderRadius: '4px',
-                          cursor: 'pointer',
-                          marginBottom: '1rem',
-                          fontSize: '14px'
-                        }}
-                    >
-                      保存行程计划
-                    </button>
+                    <div style={{ textAlign: 'center' }}>
+                      <button
+                          onClick={handleSaveTrip}
+                          style={{
+                            padding: '8px 16px',
+                            backgroundColor: '#1890ff',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '4px',
+                            cursor: 'pointer',
+                            marginBottom: '1rem',
+                            fontSize: '14px'
+                          }}
+                      >
+                        保存行程计划
+                      </button>
+                    </div>
                   </div>
               )}
 

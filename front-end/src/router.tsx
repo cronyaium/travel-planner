@@ -3,6 +3,7 @@ import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import App from "./App";
 import Register from "./pages/Register";
 import Login from "./pages/Login"
+import TripsPage from "./pages/trips";
 
 // 定义路由规则
 const router = createBrowserRouter([
@@ -17,6 +18,10 @@ const router = createBrowserRouter([
     {
         path: "/login",
         element: <Login />,
+    },
+    {
+        path: "/trips",
+        element: <TripsPage />,
     },
 ]);
 
