@@ -1,0 +1,14 @@
+# 构建阶段：用 Maven 打包
+FROM maven:3.6.3-eclipse-temurin-21 AS build
+WORKDIR /app
+COPY travel-api/pom.xml .
+COPY travel-api/src ./src
+RUN mvn clean package -DskipTests
+
+# 生产阶段：只保留 JAR 和 JRE
+FROM eclipse-temurin:21-jdk-alpine
+WORKDIR /app
+COPY --from=build /app/target/travel-api-0.0.1-SNAPSHOT.jar app.jar
+
+EXPOSE 8080
+ENTRYPOINT ["java","-jar","app.jar"]
